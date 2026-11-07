@@ -1,0 +1,60 @@
+{
+  "version": "resnet18-20261107-1827",
+  "classes": [
+    "closeUp",
+    "detail",
+    "extremeLongShot",
+    "fullShot",
+    "longShot",
+    "mediumCloseUp",
+    "mediumShot"
+  ],
+  "input": {
+    "width": 384,
+    "height": 224,
+    "letterbox": true,
+    "mean": [
+      0.48500001430511475,
+      0.4560000002384186,
+      0.4059999883174896
+    ],
+    "std": [
+      0.2290000021457672,
+      0.2240000069141388,
+      0.22499999403953552
+    ]
+  },
+  "dataset": {
+    "name": "szymonrucinski/types-of-film-shots",
+    "license": "CC-BY-4.0",
+    "n_train": 343,
+    "n_val": 172,
+    "n_test": 344,
+    "test_set": "human-labelled frames only, never used for training"
+  },
+  "test": {
+    "accuracy": 0.5727,
+    "macro_f1": 0.5665,
+    "per_class_f1": {
+      "closeUp": 0.6471,
+      "detail": 0.5217,
+      "extremeLongShot": 0.7527,
+      "fullShot": 0.3896,
+      "longShot": 0.5714,
+      "mediumCloseUp": 0.5079,
+      "mediumShot": 0.5752
+    }
+  },
+  "baseline": {
+    "model": "HOG + logistic regression (scikit-learn)",
+    "C": 0.1,
+    "accuracy": 0.3285,
+    "macro_f1": 0.3055
+  },
+  "training": {
+    "epochs": 15,
+    "best_epoch": 13,
+    "val_macro_f1": 0.6814
+  },
+  "trained_at": "2026-11-07T18:27:37+00:00"
+}

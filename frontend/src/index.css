@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Light-table palette: cool backlit surface, white sheets, graphite ink, a grease-pencil red
+   for marks and actions, and an ordered blue-to-sage ramp for shot scale (tight to wide). */
+@theme {
+  --font-sans: "Archivo Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-table: #e9edf0;
+  --color-sheet: #ffffff;
+  --color-ink: #1d232a;
+  --color-graphite: #5b6670;
+  --color-rule: #cdd4da;
+  --color-marker: #c7362b;
+  --color-marker-dark: #a42a21;
+
+  --color-ecu: #1f2b5c;
+  --color-cu: #2c4a8c;
+  --color-mcu: #3769ac;
+  --color-ms: #4a8bbd;
+  --color-fs: #66a9c3;
+  --color-ls: #92c7c6;
+  --color-els: #c3e2d6;
+}
+
+@layer base {
+  html {
+    background: var(--color-table);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-marker);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-els);
+  }
+}
+
+@utility condensed {
+  font-stretch: 72%;
+}
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

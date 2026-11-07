@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.db
+
+# Node
+node_modules/
+frontend/dist/
+
+# Built frontend copied into the backend for single-origin serving
+backend/static/
+
+# Secrets
+.env
+
+# Notebook outputs (copy the model files into backend/model/ instead)
+training/*.onnx
+training/metrics.json
+training/confusion_matrix.png
