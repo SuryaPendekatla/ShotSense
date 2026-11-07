@@ -2,7 +2,24 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { api } from "./api";
 
 const KEY = "shotsense_token";
+const DEMO_KEY = "shotsense_demo_used";
 const AuthContext = createContext(null);
+
+export function demoUsedHere() {
+  try {
+    return localStorage.getItem(DEMO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markDemoUsed() {
+  try {
+    localStorage.setItem(DEMO_KEY, "1");
+  } catch {
+    /* the server-side cookie and IP checks still apply */
+  }
+}
 
 function readToken() {
   try {
@@ -57,9 +74,29 @@ export function AuthProvider({ children }) {
     setToken(access_token);
   }, []);
 
+  const startDemo = useCallback(async () => {
+    try {
+      const { access_token } = await api("/api/auth/guest", { method: "POST" });
+      markDemoUsed();
+      writeToken(access_token);
+      setChecking(true);
+      setToken(access_token);
+    } catch (err) {
+      if (err.status === 429) markDemoUsed();
+      throw err;
+    }
+  }, []);
+
+  const refreshUser = useCallback(() => {
+    if (!token) return;
+    api("/api/auth/me", { token })
+      .then(setUser)
+      .catch((err) => err.status === 401 && signOut());
+  }, [token, signOut]);
+
   const value = useMemo(
-    () => ({ token, user, checking, authenticate, signOut }),
-    [token, user, checking, authenticate, signOut],
+    () => ({ token, user, checking, authenticate, startDemo, refreshUser, signOut }),
+    [token, user, checking, authenticate, startDemo, refreshUser, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

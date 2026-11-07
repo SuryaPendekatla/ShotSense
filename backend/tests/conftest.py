@@ -20,8 +20,7 @@ def tmp_env(tmp_path_factory):
     os.environ["SECRET_KEY"] = "test-secret-key-that-is-at-least-32-bytes"
     os.environ["ANTHROPIC_API_KEY"] = ""
     os.environ["OPENAI_API_KEY"] = ""
-    os.environ["DEMO_EMAIL"] = "demo@shotsense.app"
-    os.environ["DEMO_PASSWORD"] = "demo-pass-123"
+    os.environ["GUEST_MAX_ANALYSES"] = "2"
     os.environ["MAX_VIDEO_SECONDS"] = "60"
     return root
 

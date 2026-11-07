@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { useAuth } from "../auth";
+import { demoUsedHere, useAuth } from "../auth";
 import RhythmChart from "../components/RhythmChart";
 import { Wordmark } from "../components/Header";
 import { Button, ErrorNote, Field, Spinner, inputClass } from "../components/ui";
@@ -13,8 +13,9 @@ const SAMPLE = [
 ].map(([label, start_sec, end_sec], i) => ({ index: i + 1, label, start_sec, end_sec }));
 
 export default function AuthPage() {
-  const { authenticate } = useAuth();
-  const [mode, setMode] = useState("login");
+  const { authenticate, startDemo } = useAuth();
+  const [demoUsed, setDemoUsed] = useState(demoUsedHere);
+  const [mode, setMode] = useState(() => (demoUsedHere() ? "register" : "login"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,14 +26,30 @@ export default function AuthPage() {
     api("/api/config").then(setConfig).catch(() => setConfig(null));
   }, []);
 
-  async function submit(e, creds) {
-    e?.preventDefault();
+  async function submit(e) {
+    e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      await authenticate(creds ? "login" : mode, creds?.email ?? email, creds?.password ?? password);
+      await authenticate(mode, email, password);
     } catch (err) {
       setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  async function tryDemo() {
+    setBusy(true);
+    setError("");
+    try {
+      await startDemo();
+    } catch (err) {
+      if (err.status === 429) {
+        setDemoUsed(true);
+        setMode("register");
+      } else {
+        setError(err.message);
+      }
       setBusy(false);
     }
   }
@@ -85,13 +102,23 @@ export default function AuthPage() {
           </Button>
         </form>
 
-        {config?.demo_enabled && (
+        {config?.guest_enabled && (
           <div className="mt-6 border-t border-rule pt-6">
-            <p className="text-sm text-graphite">Just looking? Use the shared demo account.</p>
-            <Button variant="secondary" className="mt-3 w-full" disabled={busy}
-              onClick={() => submit(null, { email: config.demo_email, password: config.demo_password })}>
-              Try the demo account
-            </Button>
+            {demoUsed ? (
+              <p className="text-sm text-graphite">
+                You've already used the free demo. Create a free account to keep analyzing clips.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm text-graphite">
+                  Just looking? Try it once without signing up: {config.guest_max_analyses} analyses, visible only to
+                  you and deleted after {config.guest_session_hours} hours.
+                </p>
+                <Button variant="secondary" className="mt-3 w-full" disabled={busy} onClick={tryDemo}>
+                  Try the demo
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>

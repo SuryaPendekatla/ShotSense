@@ -6,13 +6,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
-
-from .auth import hash_password
 from .config import BACKEND_DIR, get_settings
 from .db import Base, SessionLocal, engine
-from .models import User
 from .routers import analyses, auth
+from .routers.auth import cleanup_guests
 from .schemas import LabelInfo, ModelInfo, PublicConfig
 from .services.classifier import ShotClassifier
 from .services.labels import label_info
@@ -25,21 +22,11 @@ settings = get_settings()
 STATIC_DIR = BACKEND_DIR / "static"
 
 
-def _seed_demo_user() -> None:
-    if not (settings.demo_email and settings.demo_password):
-        return
-    with SessionLocal() as db:
-        email = settings.demo_email.lower()
-        user = db.scalar(select(User).where(User.email == email))
-        if user is None:
-            db.add(User(email=email, password_hash=hash_password(settings.demo_password)))
-            db.commit()
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
-    _seed_demo_user()
+    with SessionLocal() as db:
+        cleanup_guests(db)
     app.state.classifier = ShotClassifier(settings.model_dir)
     yield
 
@@ -79,11 +66,10 @@ def model_info(request: Request) -> ModelInfo:
 
 @app.get("/api/config", response_model=PublicConfig, tags=["meta"])
 def public_config() -> PublicConfig:
-    demo = bool(settings.demo_email and settings.demo_password)
     return PublicConfig(
-        demo_enabled=demo,
-        demo_email=settings.demo_email if demo else None,
-        demo_password=settings.demo_password if demo else None,
+        guest_enabled=settings.guest_enabled,
+        guest_max_analyses=settings.guest_max_analyses,
+        guest_session_hours=settings.guest_session_hours,
         llm_enabled=resolve_provider(settings) is not None,
         max_upload_mb=settings.max_upload_mb,
         max_video_seconds=settings.max_video_seconds,

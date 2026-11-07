@@ -8,7 +8,7 @@ import { Button, ErrorNote, Field, Sheet, Spinner, inputClass } from "./ui";
 const ACCEPT = ".mp4,.mov,.m4v,.webm,.mkv,.avi,.jpg,.jpeg,.png,.webp";
 
 export default function UploadPanel({ config }) {
-  const { token } = useAuth();
+  const { token, user, refreshUser, signOut } = useAuth();
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
@@ -48,11 +48,26 @@ export default function UploadPanel({ config }) {
         token,
         onUploadProgress: (p) => setProgress(p >= 1 ? "processing" : p),
       });
+      refreshUser();
       navigate(`/analyses/${analysis.id}`);
     } catch (err) {
       setError(err.message);
       setProgress(null);
+      if (err.status === 403) refreshUser();
     }
+  }
+
+  if (user?.is_guest && user.guest_analyses_left === 0) {
+    return (
+      <Sheet className="p-5 sm:p-6">
+        <h2 className="condensed text-2xl font-bold">That's the end of the demo</h2>
+        <p className="mt-1 max-w-prose text-graphite">
+          You've used all {config?.guest_max_analyses ?? 3} demo analyses. Your results below stay available until the
+          demo ends. Create a free account to keep analyzing clips.
+        </p>
+        <Button className="mt-4" onClick={signOut}>Create an account</Button>
+      </Sheet>
+    );
   }
 
   return (

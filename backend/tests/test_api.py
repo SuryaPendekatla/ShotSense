@@ -13,11 +13,10 @@ def test_health_and_model(client):
     assert [lab["abbr"] for lab in info["labels"]] == ["ECU", "CU", "MCU", "MS", "FS", "LS", "ELS"]
 
 
-def test_public_config_and_demo_login(client):
+def test_public_config(client):
     cfg = client.get("/api/config").json()
-    assert cfg["demo_enabled"] and cfg["llm_enabled"] is False
-    r = client.post("/api/auth/login", json={"email": cfg["demo_email"], "password": cfg["demo_password"]})
-    assert r.status_code == 200 and r.json()["access_token"]
+    assert cfg["guest_enabled"] and cfg["guest_max_analyses"] == 2 and cfg["llm_enabled"] is False
+    assert "demo_password" not in cfg
 
 
 def test_auth_flow(client, token, auth):

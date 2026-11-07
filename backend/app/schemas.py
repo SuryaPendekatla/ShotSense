@@ -13,11 +13,18 @@ class Token(BaseModel):
     token_type: str = "bearer"
 
 
+class GuestToken(Token):
+    expires_at: datetime
+    max_analyses: int
+
+
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: int
     email: EmailStr
     created_at: datetime
+    is_guest: bool = False
+    guest_expires_at: datetime | None = None
+    guest_analyses_left: int | None = None
 
 
 class Prediction(BaseModel):
@@ -89,9 +96,9 @@ class ModelInfo(BaseModel):
 
 
 class PublicConfig(BaseModel):
-    demo_enabled: bool
-    demo_email: str | None = None
-    demo_password: str | None = None
+    guest_enabled: bool
+    guest_max_analyses: int
+    guest_session_hours: int
     llm_enabled: bool
     max_upload_mb: int
     max_video_seconds: int

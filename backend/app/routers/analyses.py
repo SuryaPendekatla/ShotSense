@@ -61,6 +61,10 @@ def create_analysis(
     db: Session = Depends(get_db),
 ) -> Analysis:
     settings = get_settings()
+    if user.guest is not None and user.guest.analyses_used >= settings.guest_max_analyses:
+        raise HTTPException(status.HTTP_403_FORBIDDEN,
+                            f"The demo includes {settings.guest_max_analyses} analyses and you've used them all. "
+                            "Create a free account to keep going.")
     clf = _classifier(request)
     filename = Path(file.filename or "upload").name[:255]
     ext = Path(filename).suffix.lower()
@@ -121,6 +125,8 @@ def create_analysis(
             prompt=breakdown.prompts.get(f.index, ""),
         ))
     analysis.processing_ms = round((time.perf_counter() - t0) * 1000)
+    if user.guest is not None:
+        user.guest.analyses_used += 1
     db.add(analysis)
     db.commit()
     db.refresh(analysis)

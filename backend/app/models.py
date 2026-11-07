@@ -20,6 +20,29 @@ class User(Base):
 
     analyses: Mapped[list["Analysis"]] = relationship(
         back_populates="user", cascade="all, delete-orphan")
+    guest: Mapped["GuestSession | None"] = relationship(
+        back_populates="user", cascade="all, delete-orphan", uselist=False)
+
+
+class GuestSession(Base):
+    """Marks a user as a one-time demo guest. Kept after expiry so the IP limit still applies."""
+    __tablename__ = "guest_sessions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True, index=True)
+    ip_hash: Mapped[str] = mapped_column(String(64), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    analyses_used: Mapped[int] = mapped_column(Integer, default=0)
+
+    user: Mapped[User] = relationship(back_populates="guest")
+
+    @property
+    def expired(self) -> bool:
+        expires = self.expires_at
+        if expires.tzinfo is None:  # SQLite returns naive UTC datetimes
+            expires = expires.replace(tzinfo=timezone.utc)
+        return expires <= _now()
 
 
 class Analysis(Base):

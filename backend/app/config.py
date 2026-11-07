@@ -42,9 +42,14 @@ class Settings(BaseSettings):
     llm_max_shots: int = 24
     llm_timeout_seconds: float = 60.0
 
-    # Optional demo account, created at startup so visitors can try the app.
-    demo_email: str = ""
-    demo_password: str = ""
+    # One-time demo: "Try the demo" creates a private guest account with a small quota.
+    # A browser cookie and the visitor's (hashed) IP address stop the same person
+    # starting a second demo within guest_ip_window_hours.
+    guest_enabled: bool = True
+    guest_max_analyses: int = 3
+    guest_session_hours: int = 24
+    guest_ip_window_hours: int = 24 * 30
+    guest_per_ip: int = 1
 
     @property
     def cors_origin_list(self) -> list[str]:

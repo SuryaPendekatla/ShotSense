@@ -4,7 +4,7 @@
 framing (extreme close-up to extreme long shot) with a fine-tuned ResNet-18, charts how the framing moves over time,
 and uses an LLM to write a text-to-video prompt that recreates each shot in tools like Veo, Kling or Seedance.
 
-**Live demo:** [shotsense.onrender.com](https://shotsense.onrender.com) (free hosting: the first load after a quiet spell takes about a minute while the server wakes up; use **Try the demo account** to skip sign-up)
+**Live demo:** [shotsense.onrender.com](https://shotsense.onrender.com) (free hosting: the first load after a quiet spell takes about a minute while the server wakes up; use **Try the demo** for a one-time trial without signing up)
 
 ![ShotSense sign-in page with a framing-over-time chart](docs/signin.png)
 
@@ -109,8 +109,8 @@ The root `Dockerfile` builds the React app and serves it from FastAPI, so one co
    app_port: 7860
    ---
    ```
-3. In **Settings → Variables and secrets**, add `DATABASE_URL`, `SECRET_KEY`, optionally `ANTHROPIC_API_KEY` or
-   `OPENAI_API_KEY`, and `DEMO_EMAIL` / `DEMO_PASSWORD` for a one-click demo login.
+3. In **Settings → Variables and secrets**, add `DATABASE_URL`, `SECRET_KEY` and optionally `ANTHROPIC_API_KEY` or
+   `OPENAI_API_KEY`.
 
 **Option B: Render:** new **Web Service** from your GitHub repo, runtime **Docker**, same environment variables.
 
@@ -120,6 +120,7 @@ The root `Dockerfile` builds the React app and serves it from FastAPI, so one co
 | --- | --- | --- |
 | POST | `/api/auth/register` | Create an account, returns a JWT |
 | POST | `/api/auth/login` | Sign in, returns a JWT |
+| POST | `/api/auth/guest` | Start a one-time demo: private guest account, limited analyses, expires after 24 hours |
 | GET | `/api/auth/me` | Current user |
 | POST | `/api/analyses` | Upload a video or image (multipart: `file`, `title`, `notes`) |
 | GET | `/api/analyses` | Your analyses, newest first |
@@ -129,6 +130,9 @@ The root `Dockerfile` builds the React app and serves it from FastAPI, so one co
 | GET | `/api/health` | Health check |
 
 ## Limitations and next steps
+
+- The one-time demo is limited per browser (cookie) and per internet connection (a keyed hash of the IP address,
+  never the raw IP). That stops casual reuse, but someone switching networks or devices can start another demo.
 
 - The usable dataset is small (a few thousand frames with images), and the human-labelled frames carry no film ID, so frames from one film
   could appear in both train and test. A film-level split would give a stricter estimate.

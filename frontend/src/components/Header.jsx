@@ -24,9 +24,15 @@ export default function Header() {
           <Wordmark />
         </Link>
         <div className="flex items-center gap-4 text-sm">
-          {user && <span className="hidden text-graphite sm:inline">{user.email}</span>}
+          {user?.is_guest ? (
+            <span className="text-graphite tnum">
+              Demo: {user.guest_analyses_left} {user.guest_analyses_left === 1 ? "analysis" : "analyses"} left
+            </span>
+          ) : (
+            user && <span className="hidden text-graphite sm:inline">{user.email}</span>
+          )}
           <button type="button" onClick={signOut} className="rounded px-2 py-1 font-medium text-graphite hover:text-ink">
-            Sign out
+            {user?.is_guest ? "Exit demo" : "Sign out"}
           </button>
         </div>
       </div>
