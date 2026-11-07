@@ -20,3 +20,6 @@ backend/static/
 training/*.onnx
 training/metrics.json
 training/confusion_matrix.png
+
+# Files the Claude desktop app saves into this folder
+Claude outputs/
