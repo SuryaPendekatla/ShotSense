@@ -4,7 +4,7 @@
 framing (extreme close-up to extreme long shot) with a fine-tuned ResNet-18, charts how the framing moves over time,
 and uses an LLM to write a text-to-video prompt that recreates each shot in tools like Veo, Kling or Seedance.
 
-**Live demo:** _add your deployed URL here_
+**Live demo:** [shotsense.onrender.com](https://shotsense.onrender.com) (free hosting: the first load after a quiet spell takes about a minute while the server wakes up; use **Try the demo account** to skip sign-up)
 
 ![ShotSense sign-in page with a framing-over-time chart](docs/signin.png)
 
@@ -14,10 +14,12 @@ The classifier is evaluated on a held-out test set of **human-labelled** film fr
 
 | Model | Test accuracy | Test macro-F1 |
 | --- | --- | --- |
-| HOG features + logistic regression (scikit-learn baseline) | _from metrics.json_ | _from metrics.json_ |
-| **ResNet-18, fine-tuned (PyTorch)** | _from metrics.json_ | _from metrics.json_ |
+| HOG features + logistic regression (scikit-learn baseline) | 32.9% | 30.6% |
+| **ResNet-18, fine-tuned (PyTorch)** | **57.3%** | **56.7%** |
 
-Fill in these numbers from `backend/model/metrics.json` after training, and add `confusion_matrix.png` to `docs/`.
+Random guessing across the seven classes would score about 14%. Trained on 343 human-labelled frames, validated on 172 and tested on 344 (the current dataset's AI-labelled rows ship without their images). Most errors are between neighbouring scales, such as close-up vs. medium close-up, which human labellers also disagree on.
+
+![Confusion matrix of the ResNet-18 on the test set](docs/confusion_matrix.png)
 
 ## How it works
 
@@ -35,7 +37,7 @@ flowchart LR
    distance, which catches cuts between scenes, and a grey-level pixel difference, which catches cuts within one scene
    (wide shot to close-up). A cut is declared only when the score is well above the recent baseline, so camera moves
    don't trigger it. Fades to black are dropped. The middle frame of each shot becomes its key frame.
-2. **Shot-scale classification (PyTorch → ONNX).** An ImageNet-pretrained ResNet-18 is fine-tuned on 2,900 labelled
+2. **Shot-scale classification (PyTorch → ONNX).** An ImageNet-pretrained ResNet-18 is fine-tuned on labelled
    film frames. Frames are **letterboxed, never cropped**: shot scale *is* the framing, so random crops would change the
    true label. The model is exported to ONNX and served with ONNX Runtime on CPU, so the production image needs no PyTorch.
 3. **Shot breakdown (LLM).** Claude or GPT receives the shot list, timecodes, predicted scales and key frames, and returns
@@ -47,8 +49,8 @@ flowchart LR
 All of this lives in [`training/train_shotsense.ipynb`](training/train_shotsense.ipynb), which runs on a free Colab GPU in about 20 minutes.
 
 - **Data:** [*What a Shot!*](https://huggingface.co/datasets/szymonrucinski/types-of-film-shots) (CC-BY-4.0): 863
-  human-labelled frames and 2,056 frames labelled by a DINOv2 model with Claude Opus review. Seven classes after dropping
-  the 4 frames still marked ambiguous.
+  human-labelled frames plus frames labelled by a DINOv2 model with Claude Opus review. Rows whose image file isn't
+  included in the download are skipped, and frames still marked ambiguous are dropped, leaving seven classes.
 - **Split:** human frames 40/20/40 into train/validation/test, stratified; all AI-labelled frames go to training.
   The test set is used once, at the end.
 - **Baseline:** HOG features + a small grey thumbnail, standardised, logistic regression with `C` tuned on validation.
@@ -128,7 +130,7 @@ The root `Dockerfile` builds the React app and serves it from FastAPI, so one co
 
 ## Limitations and next steps
 
-- The dataset is small (about 2,900 frames), and the human-labelled frames carry no film ID, so frames from one film
+- The usable dataset is small (a few thousand frames with images), and the human-labelled frames carry no film ID, so frames from one film
   could appear in both train and test. A film-level split would give a stricter estimate.
 - Cut detection targets hard cuts. Long dissolves and whip pans can be missed or split.
 - Next: camera-movement classification (static, pan, push-in), processing long videos in a background queue, and
